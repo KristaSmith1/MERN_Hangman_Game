@@ -1,1 +1,26 @@
-// this will be the server connection
+const express = require("express");
+const app = express();
+const cors = require("cors");
+require("dotenv").config({ path: "./config.env" });
+
+app.use(cors());
+app.use(express.json());
+
+const dbo = require("./db/connection"); // retrieves module export process
+
+const port = process.env.PORT; // go into env file, look for variable called PORT
+
+app.get("/", (req, res) => {
+    res.send("Hello, world!");
+});
+
+app.listen(port, () => {
+    dbo.connectToServer(function (err) {
+        if (err) {
+            console.err(err);
+        }
+
+    });
+    console.log(`Server is running on port ${port}`);
+
+});
