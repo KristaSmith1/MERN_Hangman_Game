@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-//import { ReactSession } from "react-client-session";
+import { ReactSession } from "react-client-session";
 
 
 export default function Homepage() {
@@ -26,8 +26,10 @@ export default function Homepage() {
 
         e.preventDefault();
 
-        // ReactSession.setStoreType("sessionStorage");
-
+        ReactSession.setStoreType("sessionStorage");
+        ReactSession.set("username", form.name);
+        console.log("User: " + ReactSession.get("username"));
+        
         navigate("/hangman");
     }
 
