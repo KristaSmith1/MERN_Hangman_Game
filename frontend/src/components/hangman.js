@@ -1,6 +1,5 @@
 // this file will contain the hangman components
 
-
 import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 //import { ReactSession } from "react-client-session";
@@ -14,8 +13,10 @@ export default function Hangman() {
     const [word, setWord] = useState('');
     const [correctLetter, setCorrectLetter] = useState([]);
     const [wrongLetter, setWrongLetter] = useState([]);
-
     const [status, setStatus] = useState('');
+
+    const [usedList, setUsedList] = useState([]);
+    const [repeatMessage, setMessage] = useState('');
 
     // function to retrieve a random word from wordChoices
     const getWord = () => {
@@ -45,16 +46,26 @@ export default function Hangman() {
     const makeGuess = letter => {
         // handle event of user choosing a letter
         console.log("We have selected a letter");
-        if (word.includes(letter)) {
-            // when the user chooses a correct letter:
-            // set state of component to correct letter
-            console.log("It was a good letter");
-            setCorrectLetter([...correctLetter, letter]);
+        setMessage("");
+        if (!usedList.includes(letter)) {
+            if (word.includes(letter)) {
+                // when the user chooses a correct letter:
+                // set state of component to correct letter
+                console.log("It was a good letter");
+                setCorrectLetter([...correctLetter, letter]);
+                setUsedList([letter]);
+            } else {
+                // when user chooses a wrong letter:
+                console.log("It was a bad letter");
+                setWrongLetter([...wrongLetter, letter]);
+                setUsedList([letter]);
+            }
         } else {
-            // when user chooses a wrong letter:
-            console.log("It was a bad letter");
-            setWrongLetter([...wrongLetter, letter]);
+            // if wrong letter is in list:
+            console.log("You have already chosen this");
+            setMessage("You have chosen this letter already");
         }
+
     }
 
     useEffect(() => {
@@ -89,7 +100,9 @@ export default function Hangman() {
                 </button>)}
             <p>Previous incorrect guesses: </p>
             <p>{wrongLetter}</p>
+            <p>{repeatMessage}</p>
             <WinStatus status={status} word={word} reset={resetGame} />
         </div>
     );
 }
+
