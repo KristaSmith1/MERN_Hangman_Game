@@ -18,7 +18,22 @@ export default function Hangman() {
     const [status, setStatus] = useState('');
 
     // function to retrieve a random word from wordChoices
-    const getWord = () => setWord(wordChoices[Math.floor(Math.random() * wordChoices.length)].toUpperCase());
+    const getWord = () => {
+        //setWord(wordChoices[Math.floor(Math.random() * wordChoices.length)].toUpperCase());
+        async function getRandomWord() {
+            const response = await fetch(`http://localhost:4000/get-word/`);
+
+            if (!response.ok) {
+                const message = `An error occurred: ${response.statusText}`;
+                window.alert(message);
+                return;
+            }
+
+            const word = await response.json()
+            setWord(word.word.toUpperCase());
+        }
+        getRandomWord();
+    }
 
     const resetGame = () => {
         getWord();

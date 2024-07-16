@@ -21,3 +21,17 @@ const ObjectId = require("mongodb").ObjectId;
 //         throw err;
 //     }
 // });;
+
+// Get random work from DB and return
+gameRoutes.route("/get-word").get(async (req, res) => {
+    try{
+        let db_connect = dbo.getDb("hangman");
+        const result = await db_connect.collection("words").find({}).toArray();
+        const randomWord = result[Math.floor(Math.random() * result.length)]
+        res.json(randomWord);
+    } catch (err) {
+        throw err;
+    }
+});
+
+module.exports = gameRoutes;
