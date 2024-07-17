@@ -1,143 +1,103 @@
-// this file will contain the hangman components
+const express = require("express");
 
+const gameRoutes = express.Router();
 
-import React, { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { ReactSession } from "react-client-session";
-import WinStatus from "./winStatus";
+// connect to db
+const dbo = require("../db/connection");
+const ObjectId = require("mongodb").ObjectId;
 
-
-export default function Hangman() {
-    const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-    //const wordChoices = ["password", "keyboard", "name", "computer"]; // THIS WILL BE A FILE FULL OF WORDS
-
-    const [word, setWord] = useState('');
-    const [correctLetter, setCorrectLetter] = useState([]);
-    const [wrongLetter, setWrongLetter] = useState([]);
-
-    const [status, setStatus] = useState('');
-
-    // Guess Count state
-    const [guessCount, setGuessCount] = useState(1);
-
-    const navigate = useNavigate(); // to redirect pages
-
-    // function to retrieve a random word from wordChoices
-    const getWord = () => {
-        //setWord(wordChoices[Math.floor(Math.random() * wordChoices.length)].toUpperCase());
-        async function getRandomWord() {
-            const response = await fetch(`http://localhost:4000/get-word/`);
-
-            if (!response.ok) {
-                const message = `An error occurred: ${response.statusText}`;
-                window.alert(message);
-                return;
-            }
-
-            const word = await response.json()
-            console.log(word.word)
-            setWord(word.word.toUpperCase());
+//let user enter name at beginning of game
+gameRoutes.route("/").get(async (req, res) => {
+    // let player enter name
+    try {
+        let db_connect = dbo.getDb();
+        let player = {
+            name: req.body.name
         }
-        getRandomWord();
+        const result = db_connect.collection("hangman").insertOne(player);
+        res.json(result);
+
+    } catch (err) {
+        throw err;
     }
+});
 
-    const resetGame = () => {
-        getWord();
-        setStatus('');
-        setCorrectLetter([]);
-        setWrongLetter([]);
-        setGuessCount(0);
+// Get random work from DB and return
+gameRoutes.route("/get-word").get(async (req, res) => {
+    try{
+        let db_connect = dbo.getDb("hangman");
+        const result = await db_connect.collection("words").find({}).toArray();
+        const randomWord = result[Math.floor(Math.random() * result.length)]
+        res.json(randomWord);
+    } catch (err) {
+        throw err;
     }
+});
 
-    const makeGuess = letter => {
-        // handle event of user choosing a letter
-        console.log("We have selected a letter");
-        // Increment guess count
-        setGuessCount(guessCount + 1);
-        console.log(guessCount)
-        
-        console.log(guessCount);
-        if (word.includes(letter)) {
-            // when the user chooses a correct letter:
-            // set state of component to correct letter
-            console.log("It was a good letter");
-            setCorrectLetter([...correctLetter, letter]);
-        } else {
-            // when user chooses a wrong letter:
-            console.log("It was a bad letter");
-            setWrongLetter([...wrongLetter, letter]);
+// Post winning user to top-scores
+gameRoutes.route("/add-user").post(async (req, res) => {
+    try{
+        let db_connect = dbo.getDb("hangman");
+        const insertUser = {
+            "username": req.body.username,
+            "guesses": req.body.guesses,
+            "wordLength": req.body.wordLength,
         }
+        const result = await db_connect.collection("hangman").insertOne(insertUser);
+        res.json(result);
+    } catch (err) {
+        throw err;
     }
+});
 
-    const delay = ms => new Promise(res => setTimeout(res, ms));
+// Get random work from DB and return
+gameRoutes.route("/get-top-scores").get(async (req, res) => {
+    try{
+        //Word length
+        let db_connect = dbo.getDb("hangman");
+        const result = await db_connect.collection("hangman").find({wordLength:3}).sort({guesses:1}).limit(10).toArray();
+        console.log(result)
+        res.json(result);
+    } catch (err) {
+        throw err;
+    }
+});
 
-    useEffect(() => {
-        // handle win scenario
-        if (correctLetter.length && word.split('').every(letter => correctLetter.includes(letter))) {
-            console.log("Winner");
-            setStatus('win');
+module.exports = gameRoutes;
 
-            async function fetchData() {
-                // Add winning user
-                const user = {
-                    "username": ReactSession.get("username"), 
-                    "guesses": guessCount, 
-                    "wordLength": word.length,
-                }
-                // Post user
-                const response = await fetch("http://localhost:4000/add-user", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(user),
-                })
-                .catch(error => {
-                    window.alert(error);
-                    return;
-                });
-                const userResponse = await response.json();
+// gameRoutes.route("/start-game").post(async (req, res) => {
+//     try{
+//         let db_connect = dbo.getDb("hangman");
+//         let player = {
+//             name: req.body.name,
+//         }
+//         // check if player already used and assign session
+//         const checkPlayer = await db_connect.collection("hangman").findOne({ name: player.name });
+//         if(checkPlayer) {
+//             message = {message: "Already a user named: " + player.name}
+//             console.log(message)
+//             res.json(message)
+//         }
+//         else {
+//             const result = await db_connect.collection("hangman").insertOne(player);
+//             message = {message: "Success"}
+//             res.json(result);
+//         }
+//     } catch (err) {
+//         throw err;
+//     }
+//});
 
-                // Session to capture word length
-                ReactSession.set("wordLength", word.length);
-
-                // Delay before navigation
-                await delay(3000);
-        
-                navigate("/top-scores");
-            }
-
-            fetchData();
-            return;
-            
-        }
-    }, [correctLetter]);
-
-    useEffect(() => {
-        // handle fail scenario (runs out of 6 guesses)
-        if (wrongLetter.length === 6) {
-            console.log("Out of guesses");
-            setStatus('lost');
-        }
-    }, [wrongLetter]);
-
-    useEffect(resetGame, []); // reset the game board to blank
-
-    // if user has guessed a correct letter, show the letter; else show the "_"
-    const hideWord = word.split('').map(letter => correctLetter.includes(letter) ? letter : ' _ ').join('');
-
-    // return the hidden word, the alphabet, wrong letters, win status
-    return (
-        <div>
-            <p>{hideWord}</p>
-            {alphabet.map((letter, index) =>
-                <button
-                    onClick={() => makeGuess(letter)}
-                    key={index}>{letter}
-                </button>)}
-            <p>Previous incorrect guesses: </p>
-            <p>{wrongLetter}</p>
-            <WinStatus status={status} word={word} reset={resetGame} />
-        </div>
-    );
-}
+// gameRoutes.route("/add-words").post(async (req, res) => {
+//     try{
+//         let db_connect = dbo.getDb();
+//         let myobj = {word: req.body.word};
+//         console.log(myobj)
+//         const result = await db_connect.collection("words").insertOne(myobj);
+//         //result = myobj
+//         message = {message: "Success"};
+//         res.json(result);
+//     } catch (err) {
+//         throw err;
+//     }
+// })
