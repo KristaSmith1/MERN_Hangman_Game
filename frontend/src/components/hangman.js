@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 //import { ReactSession } from "react-client-session";
 import WinStatus from "./winStatus";
+import HangmanDrawing from "./hangmanDrawing";
+import "./hangmanDrawing.css";
 
 
 export default function Hangman() {
@@ -102,6 +104,12 @@ export default function Hangman() {
             <p>{wrongLetter}</p>
             <p>{repeatMessage}</p>
             <WinStatus status={status} word={word} reset={resetGame} />
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <HangmanDrawing wrongLetter={wrongLetter.length} />
         </div>
     );
 }
