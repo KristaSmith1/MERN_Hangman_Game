@@ -63,41 +63,20 @@ gameRoutes.route("/get-top-scores").get(async (req, res) => {
     }
 });
 
+// Get random work from DB and return
+gameRoutes.route("/get-top-scores/:id").get(async (req, res) => {
+    try{
+        //Word length
+        let db_connect = dbo.getDb("hangman");
+        let wordLength = parseInt(req.params.id);
+        console.log(wordLength);
+        console.log(typeof(wordLength));
+        const result = await db_connect.collection("hangman").find({wordLength:wordLength}).sort({guesses:1}).limit(10).toArray();
+        console.log(result)
+        res.json(result);
+    } catch (err) {
+        throw err;
+    }
+});
+
 module.exports = gameRoutes;
-
-// gameRoutes.route("/start-game").post(async (req, res) => {
-//     try{
-//         let db_connect = dbo.getDb("hangman");
-//         let player = {
-//             name: req.body.name,
-//         }
-//         // check if player already used and assign session
-//         const checkPlayer = await db_connect.collection("hangman").findOne({ name: player.name });
-//         if(checkPlayer) {
-//             message = {message: "Already a user named: " + player.name}
-//             console.log(message)
-//             res.json(message)
-//         }
-//         else {
-//             const result = await db_connect.collection("hangman").insertOne(player);
-//             message = {message: "Success"}
-//             res.json(result);
-//         }
-//     } catch (err) {
-//         throw err;
-//     }
-//});
-
-// gameRoutes.route("/add-words").post(async (req, res) => {
-//     try{
-//         let db_connect = dbo.getDb();
-//         let myobj = {word: req.body.word};
-//         console.log(myobj)
-//         const result = await db_connect.collection("words").insertOne(myobj);
-//         //result = myobj
-//         message = {message: "Success"};
-//         res.json(result);
-//     } catch (err) {
-//         throw err;
-//     }
-// })
