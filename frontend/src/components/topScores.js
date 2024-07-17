@@ -9,12 +9,8 @@ import { ReactSession } from "react-client-session";
 export default function TopScores() {
 
     async function onClick(e) {
-        // when the user submits the form:
-        // store user name
-
+        // navigate back to game
         e.preventDefault();
-
-
         navigate("/hangman");
     }
 
