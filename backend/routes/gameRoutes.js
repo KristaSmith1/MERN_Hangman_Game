@@ -51,28 +51,11 @@ gameRoutes.route("/add-user").post(async (req, res) => {
 });
 
 // Get random work from DB and return
-gameRoutes.route("/get-top-scores").get(async (req, res) => {
-    try{
-        //Word length
-        let db_connect = dbo.getDb("hangman");
-        const result = await db_connect.collection("hangman").find({wordLength:3}).sort({guesses:1}).limit(10).toArray();
-        console.log(result)
-        res.json(result);
-    } catch (err) {
-        throw err;
-    }
-});
-
-// Get random work from DB and return
 gameRoutes.route("/get-top-scores/:id").get(async (req, res) => {
     try{
-        //Word length
         let db_connect = dbo.getDb("hangman");
-        let wordLength = parseInt(req.params.id);
-        console.log(wordLength);
-        console.log(typeof(wordLength));
-        const result = await db_connect.collection("hangman").find({wordLength:wordLength}).sort({guesses:1}).limit(10).toArray();
-        console.log(result)
+        const query = parseInt(req.params.id);
+        const result = await db_connect.collection("hangman").find({wordLength:query}).sort({guesses:1}).limit(10).toArray();
         res.json(result);
     } catch (err) {
         throw err;
