@@ -11,7 +11,7 @@ const App = () => {
     <Routes>
       <Route exact path="/" element={<Homepage />} />
       <Route path="/hangman" element={<Hangman />} />
-      <Route path="/top-scores" element={<TopScores />} />
+      <Route path="/top-scores/:id" element={<TopScores />} />
     </Routes>
   );
 };
