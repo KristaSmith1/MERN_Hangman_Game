@@ -1,6 +1,4 @@
 // this file will contain the hangman components
-
-
 import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { ReactSession } from "react-client-session";
@@ -11,15 +9,13 @@ import "./hangmanDrawing.css";
 
 export default function Hangman() {
     const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
-    //const wordChoices = ["password", "keyboard", "name", "computer"]; // THIS WILL BE A FILE FULL OF WORDS
 
-    const [word, setWord] = useState('');
-    const [correctLetter, setCorrectLetter] = useState([]);
-    const [wrongLetter, setWrongLetter] = useState([]);
-    const [status, setStatus] = useState('');
-
-    const [usedList, setUsedList] = useState([]);
-    const [repeatMessage, setMessage] = useState('');
+    const [word, setWord] = useState(''); // word to guess
+    const [correctLetter, setCorrectLetter] = useState([]); // list of correct letters
+    const [wrongLetter, setWrongLetter] = useState([]); // list of wrong letters
+    const [status, setStatus] = useState(''); // win status
+    const [usedList, setUsedList] = useState([]); // list of guessed letters
+    const [repeatMessage, setMessage] = useState(''); // message for repeating letters
 
     // Guess Count state
     const [guessCount, setGuessCount] = useState(1);
@@ -28,7 +24,6 @@ export default function Hangman() {
 
     // function to retrieve a random word from wordChoices
     const getWord = () => {
-        //setWord(wordChoices[Math.floor(Math.random() * wordChoices.length)].toUpperCase());
         async function getRandomWord() {
             const response = await fetch(`http://localhost:4000/get-word/`);
 
@@ -38,8 +33,7 @@ export default function Hangman() {
                 return;
             }
 
-            const word = await response.json()
-            console.log(word.word)
+            const word = await response.json();
             setWord(word.word.toUpperCase());
         }
         getRandomWord();
@@ -57,13 +51,14 @@ export default function Hangman() {
     const makeGuess = letter => {
         // handle event of user choosing a letter
         console.log("We have selected a letter");
-        // Increment guess count
-        setGuessCount(guessCount + 1);
-        console.log(guessCount);
 
         setMessage("");
 
         if (!usedList.includes(letter)) {
+            // Increment guess count
+            setGuessCount(guessCount + 1);
+            console.log(guessCount);
+
             if (word.includes(letter)) {
                 // when the user chooses a correct letter:
                 // set state of component to correct letter
@@ -94,8 +89,8 @@ export default function Hangman() {
             async function fetchData() {
                 // Add winning user
                 const user = {
-                    "username": ReactSession.get("username"), 
-                    "guesses": guessCount, 
+                    "username": ReactSession.get("username"),
+                    "guesses": guessCount,
                     "wordLength": word.length,
                 }
                 // Post user
@@ -106,10 +101,10 @@ export default function Hangman() {
                     },
                     body: JSON.stringify(user),
                 })
-                .catch(error => {
-                    window.alert(error);
-                    return;
-                });
+                    .catch(error => {
+                        window.alert(error);
+                        return;
+                    });
                 const userResponse = await response.json();
 
                 // Session to capture word length
@@ -118,13 +113,12 @@ export default function Hangman() {
                 // Delay before navigation
                 await delay(3000);
 
-                //let passWordLength = word.length
                 navigate(`/top-scores/${word.length}`);
             }
 
             fetchData();
             return;
-            
+
         }
     }, [correctLetter]);
 
@@ -133,7 +127,42 @@ export default function Hangman() {
         if (wrongLetter.length === 6) {
             console.log("Out of guesses");
             setStatus('lost');
+
+            async function fetchData() {
+                // Add winning user
+                const user = {
+                    "username": ReactSession.get("username"),
+                    "guesses": guessCount,
+                    "wordLength": word.length,
+                }
+                // Post user
+                const response = await fetch("http://localhost:4000/add-user", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(user),
+                })
+                    .catch(error => {
+                        window.alert(error);
+                        return;
+                    });
+                const userResponse = await response.json();
+
+                // Session to capture word length
+                ReactSession.set("wordLength", word.length);
+
+                // Delay before navigation
+                await delay(3000);
+
+                navigate(`/top-scores/${word.length}`);
+            }
+
+            fetchData();
+            return;
+
         }
+
     }, [wrongLetter]);
 
     useEffect(resetGame, []); // reset the game board to blank
@@ -152,6 +181,7 @@ export default function Hangman() {
                 </button>)}
             <p>Previous incorrect guesses: </p>
             <p>{wrongLetter}</p>
+            <p>{repeatMessage}</p>
             <WinStatus status={status} word={word} reset={resetGame} />
             <br />
             <br />
