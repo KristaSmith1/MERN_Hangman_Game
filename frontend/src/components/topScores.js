@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
 import { ReactSession } from "react-client-session";
 
-
 const TopScore = (props) => (
     <tr>
         <td>{props.topScore.username}</td>
@@ -32,7 +31,6 @@ export default function TopScores() {
 
         async function getTopScores() {
             const response = await fetch(`http://localhost:4000/get-top-scores/${wordLength}`);
-            //console.log(params.wordLength);
             if (!response.ok) {
                 const message = `An error occurred: ${response.statusText}`;
                 window.alert(message);
@@ -63,7 +61,7 @@ export default function TopScores() {
 
     // Return Top Score List and options to play again
     return (
-        
+
         <div>
 
             <h1>Top Scores</h1>
